@@ -5,7 +5,7 @@ import SearchForm from './SearchForm';
 import GeocodeResult from './GeocodeResult';
 import Map from './Map';
 
-const GEOCODE_ENDPOINT = 'https://maps.googleapis.com/maps/api/geocode/json';
+import { geocode } from '../domain/Geocoder.js'
 
 class App extends Component {
   constructor(props) {
@@ -29,18 +29,11 @@ class App extends Component {
   }
 
   handlePlaceSubmit(place) {
-    axios.get(GEOCODE_ENDPOINT, { params: { address: place } })
-      .then((results) => {
-        console.log(results);
-        const data = results.data;
-        const result = results.data.results[0];
-        switch (data.status) {
+    geocode(place)
+      .then(({ status, address, location }) => {
+        switch (status) {
           case 'OK': {
-            const location = result.geometry.location;
-            this.setState({
-              address: result.formatted_address,
-              location: result.geometry.location,
-            });
+            this.setState({ address, location });
             break;
           }
           case 'ZERO_RESULTS': {
@@ -59,14 +52,16 @@ class App extends Component {
 
   render() {
     return (
-      <div>
-        <h1>緯度経度検索</h1>
+      <div className="app">
+        <h1 className="app-title">ホテル検索</h1>
         <SearchForm onSubmit={place => this.handlePlaceSubmit(place)} />
-        <GeocodeResult
-          address={this.state.address}
-          location={this.state.location}
-        />
-        <Map location={this.state.location} />
+        <div className="result-area">
+          <Map location={this.state.location} />
+          <GeocodeResult
+            address={this.state.address}
+            location={this.state.location}
+          />
+        </div>
       </div>
     );
   }
